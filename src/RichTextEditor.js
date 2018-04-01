@@ -5,6 +5,8 @@ import {InjectedMessageHandler} from './WebviewMessageHandler';
 import {actions, messages} from './const';
 import {Modal, View, Text, StyleSheet, TextInput, TouchableOpacity, Platform, PixelRatio, Keyboard, Dimensions} from 'react-native';
 
+import {handleAction} from './WebviewMessageHandler';
+
 const injectScript = `
   (function () {
     ${InjectedMessageHandler}
@@ -36,7 +38,8 @@ export default class RichTextEditor extends Component {
     super(props);
     this._sendAction = this._sendAction.bind(this);
     this.registerToolbar = this.registerToolbar.bind(this);
-    this.onBridgeMessage = this.onBridgeMessage.bind(this);
+    //this.onBridgeMessage = this.onBridgeMessage.bind(this);
+    this.onMessage = this.onMessage.bind(this);
     this._onKeyboardWillShow = this._onKeyboardWillShow.bind(this);
     this._onKeyboardWillHide = this._onKeyboardWillHide.bind(this);
     this.state = {
@@ -94,9 +97,9 @@ export default class RichTextEditor extends Component {
     this.setEditorHeight(editorAvailableHeight);
   }
 
-  onBridgeMessage(str){
+  onMessage(event){
     try {
-      const message = JSON.parse(str);
+      const message = JSON.parse(event.nativeEvent.data);
 
       switch (message.type) {
         case messages.TITLE_HTML_RESPONSE:
@@ -167,7 +170,7 @@ export default class RichTextEditor extends Component {
           console.log('FROM ZSS', message.data);
           break;
         case messages.SCROLL:
-          this.webviewBridge.setNativeProps({contentOffset: {y: message.data}});
+          this.webView.setNativeProps({contentOffset: {y: message.data}});
           break;
         case messages.TITLE_FOCUSED:
           this.titleFocusHandler && this.titleFocusHandler();
@@ -294,13 +297,12 @@ export default class RichTextEditor extends Component {
     const pageSource = PlatformIOS ? require('./editor.html') : { uri: 'file:///android_asset/editor.html' };
     return (
       <View style={{flex: 1}}>
-        <WebViewBridge
+        <WebView
           {...this.props}
           hideKeyboardAccessoryView={true}
           keyboardDisplayRequiresUserAction={false}
-          ref={(r) => {this.webviewBridge = r}}
-          onBridgeMessage={(message) => this.onBridgeMessage(message)}
-          injectedJavaScript={injectScript}
+          ref={(r) => {this.webView = r}}
+          onMessage={(message) => this.onMessage(message)}
           source={pageSource}
           onLoad={() => this.init()}
         />
@@ -325,7 +327,8 @@ export default class RichTextEditor extends Component {
   _sendAction(action, data) {
     let jsonString = JSON.stringify({type: action, data});
     jsonString = this.escapeJSONString(jsonString);
-    this.webviewBridge.sendToBridge(jsonString);
+    //this.webviewBridge.sendToBridge(jsonString);
+    this.webView.injectJavaScript(handleAction({type: action, data}));
   }
 
   //-------------------------------------------------------------------------------
