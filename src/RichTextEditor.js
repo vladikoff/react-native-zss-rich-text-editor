@@ -1,17 +1,11 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import WebViewBridge from 'react-native-webview-bridge-updated';
-import {InjectedMessageHandler} from './WebviewMessageHandler';
+//import WebViewBridge from 'react-native-webview-bridge-updated';
 import {actions, messages} from './const';
-import {Modal, View, Text, StyleSheet, TextInput, TouchableOpacity, Platform, PixelRatio, Keyboard, Dimensions} from 'react-native';
+import {Modal, View, Text, StyleSheet, TextInput, TouchableOpacity, Platform, PixelRatio, Keyboard, Dimensions, WebView} from 'react-native';
 
 import {handleAction} from './WebviewMessageHandler';
 
-const injectScript = `
-  (function () {
-    ${InjectedMessageHandler}
-  }());
-`;
 
 const PlatformIOS = Platform.OS === 'ios';
 
